@@ -1,4 +1,4 @@
---        My master awaits...        --
+--        My master awaits..        --
  
  
  
@@ -593,9 +593,13 @@ function mineTunnel(obj, ws)
 	return blocks
 end
  
-function websocketLoop()
- 
-	local ws, err = http.websocket("ws://ottomated.net:43509")
+-- code stolen from ottomated
+
+--code butchered by nopogo_tv
+
+
+function websocketLoop() 
+	local ws, err = http.websocket("localhost:8000") --"ws://ottomated.net:43509"
  
 	if err then
 		print(err)
