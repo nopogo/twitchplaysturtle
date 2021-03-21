@@ -2,7 +2,7 @@ import websockets
 import asyncio
 import uuid
 import json
-import settings, secrets
+import settings, secrets, message_handler
 
 class WebSocketClient():
 
@@ -41,7 +41,8 @@ class WebSocketClient():
         while True:
             try:
                 message = await connection.recv()
-                print('Received message from server: ' + str(message))
+                # print('Received message from server: ' + str(message))
+                message_handler.parse_message(message)
             except websockets.exceptions.ConnectionClosed:
                 print('Connection with server closed')
                 break
