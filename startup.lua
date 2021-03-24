@@ -531,6 +531,50 @@ function undergoMitosis()
 	end
 	return cloneId
 end
+
+function split(str, pat)
+    local t = {}  -- NOTE: use {n = 0} in Lua-5.0
+    local fpat = "(.-)" .. pat
+    local last_end = 1
+    local s, e, cap = str:find(fpat, 1)
+    while s do
+       if s ~= 1 or cap ~= "" then
+          table.insert(t, cap)
+       end
+       last_end = e+1
+       s, e, cap = str:find(fpat, last_end)
+    end
+    if last_end <= #str then
+       cap = str:sub(last_end)
+       table.insert(t, cap)
+    end
+    return t
+ end
+
+function handleMessage(message)
+    splitMessage = split(message, ':')
+
+    if splitMessage[1] == "move" then
+        if splitMessage[2] == "f" then
+            return turtle.forward()
+        end
+        if splitMessage[2] == "b" then
+            return turtle.back()
+        end
+        if splitMessage[2] == "l" then
+            return turtle.turnLeft()
+        end
+        if splitMessage[2] == "r" then
+            return turtle.turnRight()
+        end
+        if splitMessage[2] == "u" then
+            return turtle.up()
+        end
+        if splitMessage[2] == "d" then
+            return turtle.down()
+        end
+    end
+end
  
 function mineTunnel(obj, ws)
 	local file
@@ -599,7 +643,7 @@ end
 
 
 function websocketLoop() 
-	local ws, err = http.websocket("localhost:8000") --"ws://ottomated.net:43509"
+	local ws, err = http.websocket("86.93.205.14:8000") --"ws://ottomated.net:43509"
  
 	if err then
 		print(err)
@@ -607,30 +651,14 @@ function websocketLoop()
 		while true do
 			term.clear()
 			term.setCursorPos(1,1)
-			print("      {O}\n")
-			print("Pog Turtle OS. Do not read my code unless you are 5Head.")
+			print("      experiment:\n")
+			print("I am too dumb to make this work.")
 			local message = ws.receive()
 			if message == nil then
 				break
 			end
-			local obj = json.decode(message)
-			if obj.type == 'eval' then
-				local func = loadstring(obj['function'])
-				local result = func()
-				ws.send(json.encode({data=result, nonce=obj.nonce}))
-			elseif obj.type == 'mitosis' then
-				local status, res = pcall(undergoMitosis)
-				if not status then
-					ws.send(json.encode({data="null", nonce=obj.nonce}))
-				elseif res == nil then
-					ws.send(json.encode({data="null", nonce=obj.nonce}))
-				else
-					ws.send(json.encode({data=res, nonce=obj.nonce}))
-				end
-			elseif obj.type == 'mine' then
-				local status, res = pcall(mineTunnel, obj, ws)
-				ws.send(json.encode({data="end", nonce=obj.nonce}))
-			end
+			local status, res = pcall(handleMessage, message, ws)
+            ws.send(json.encode({data=res, nonce=obj.nonce}))
 		end
 	end
 	if ws then
@@ -645,9 +673,9 @@ while true do
 	if res == 'Terminated' then
 		print("You can't use straws to kill this turtle...")
 		os.sleep(1)
-		print("Read my code, Michael.")
+		print("bitch.")
 		break
 	end
-	print("{O} I'm sleeping... please don't mine me :)")
+	print("ZZZZZZZZZZZZZZZ :)")
 	os.sleep(5)
 end

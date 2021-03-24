@@ -3,6 +3,7 @@ import asyncio
 import uuid
 import json
 import settings, secrets, message_handler
+import logging
 
 class WebSocketClient():
 
@@ -10,14 +11,16 @@ class WebSocketClient():
         # list of topics to subscribe to
         self.topics = settings.topics
         self.auth_token = "{}".format(secrets.access_token)
+        
         pass
 
-    async def connect(self):
+    async def connect(self, connection_address):
         '''
            Connecting to webSocket server
            websockets.client.connect returns a WebSocketClientProtocol, which is used to send and receive messages
         '''
-        self.connection = await websockets.client.connect('wss://pubsub-edge.twitch.tv')
+
+        self.connection = await websockets.client.connect(connection_address)
         if self.connection.open:
             print('Connection stablished. Client correcly connected')
             # Send greeting
@@ -36,15 +39,30 @@ class WebSocketClient():
         '''Sending message to webSocket server'''
         await self.connection.send(message)
 
+    async def localLogic(self, message):
+        while True:
+            try:
+                message = await connection.recv()
+                print('Received message from server: ' + str(message))
+            except websockets.exceptions.ConnectionClosed:
+                print('Connection with server closed')
+                break
+            except Exception as e:
+                print(e)
+                break
+
     async def receiveMessage(self, connection):
         '''Receiving all server messages and handling them'''
         while True:
             try:
                 message = await connection.recv()
                 # print('Received message from server: ' + str(message))
-                message_handler.parse_message(message)
+                await message_handler.parse_message(message)
             except websockets.exceptions.ConnectionClosed:
                 print('Connection with server closed')
+                break
+            except BaseException:
+                logging.exception("message exception thrown")
                 break
 
     async def heartbeat(self, connection):
@@ -56,9 +74,12 @@ class WebSocketClient():
             try:
                 data_set = {"type": "PING"}
                 json_request = json.dumps(data_set)
-                print(json_request)
+                # print(json_request)
                 await connection.send(json_request)
                 await asyncio.sleep(60)
             except websockets.exceptions.ConnectionClosed:
                 print('Connection with server closed')
+                break
+            except Exception as e:
+                print(e)
                 break

@@ -1,12 +1,13 @@
 import asyncio
 from webSocketClient import WebSocketClient
+import settings
 
 if __name__ == '__main__':
     # Creating client object
     client = WebSocketClient()
     loop = asyncio.get_event_loop()
     # Start connection and get client connection protocol
-    connection = loop.run_until_complete(client.connect())
+    connection = loop.run_until_complete(client.connect(settings.ws_host))
     # Start listener and heartbeat
     tasks = [
         asyncio.ensure_future(client.heartbeat(connection)),
